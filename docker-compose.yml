@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  sqm-images:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sqm-images
+    restart: unless-stopped
+
+    # Environment variables from .env file
+    env_file:
+      - .env
+
+    # Override specific env vars for production
+    environment:
+      - NODE_ENV=production
+      - UPLOAD_DIR=/app/uploads
+      - OUTPUT_DIR=/app/generated-images
+      - PYTHON_PATH=/app/.venv/bin/python3
+
+    # Persistent volumes for generated images and uploads
+    volumes:
+      - sqm_images_data:/app/generated-images
+      - sqm_uploads_data:/app/uploads
+
+    # Connect to Caddy's network
+    networks:
+      - caddy_network
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    # Resource limits (image generation can be memory-intensive)
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+# Named volumes for data persistence
+volumes:
+  sqm_images_data:
+    driver: local
+  sqm_uploads_data:
+    driver: local
+
+# External network (shared with Caddy)
+networks:
+  caddy_network:
+    external: true
+    name: n8n-docker-caddy_default
