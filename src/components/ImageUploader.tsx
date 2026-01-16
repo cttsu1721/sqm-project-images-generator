@@ -86,10 +86,10 @@ export function ImageUploader({ onImageSelect, disabled }: ImageUploaderProps) {
   return (
     <div className="space-y-4">
       <Card
-        className={`relative border-2 border-dashed transition-colors ${
+        className={`relative border-2 border-dashed transition-colors bg-[var(--sqm-bg-elevated)] ${
           isDragActive
-            ? "border-blue-500 bg-blue-50"
-            : "border-gray-300 hover:border-gray-400"
+            ? "border-[var(--sqm-green)] bg-[var(--sqm-bg-secondary)]"
+            : "border-[var(--sqm-border-light)] hover:border-[var(--sqm-green)]"
         } ${disabled ? "opacity-50 pointer-events-none" : ""}`}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
@@ -115,7 +115,7 @@ export function ImageUploader({ onImageSelect, disabled }: ImageUploaderProps) {
         ) : (
           <label className="flex flex-col items-center justify-center p-12 cursor-pointer">
             <svg
-              className="w-16 h-16 text-gray-400 mb-4"
+              className="w-16 h-16 text-[var(--sqm-text-muted)] mb-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -127,13 +127,13 @@ export function ImageUploader({ onImageSelect, disabled }: ImageUploaderProps) {
                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            <p className="text-lg font-medium text-gray-700">
+            <p className="text-lg font-medium text-[var(--sqm-text-primary)]">
               Drop your hero project image here
             </p>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-[var(--sqm-text-secondary)] mt-1">
               or click to browse
             </p>
-            <p className="text-xs text-gray-400 mt-4">
+            <p className="text-xs text-[var(--sqm-text-muted)] mt-4">
               Supports JPG, PNG, WebP
             </p>
             <input

@@ -50,15 +50,15 @@ export function ImageGallery({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Generated Variations</h2>
+        <h2 className="text-xl font-semibold font-serif text-[var(--sqm-text-primary)]">Generated Variations</h2>
         {onDownloadAll && (
-          <Button onClick={onDownloadAll}>Download All</Button>
+          <Button onClick={onDownloadAll} className="sqm-button">Download All</Button>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {images.map((image) => (
-          <Card key={image.id} className="overflow-hidden">
+          <Card key={image.id} className="sqm-card overflow-hidden">
             <div className="relative">
               <img
                 src={image.url}
@@ -79,18 +79,18 @@ export function ImageGallery({
 
             <div className="p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-medium capitalize">
+                <span className="font-medium capitalize text-[var(--sqm-text-primary)]">
                   {image.variationType.replace(/_/g, " ")}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-[var(--sqm-text-muted)]">
                   {image.attempts} attempt{image.attempts !== 1 ? "s" : ""}
                 </span>
               </div>
 
               {image.scoreBreakdown && (
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500 font-medium">Score Breakdown:</p>
-                  <div className="grid grid-cols-2 gap-1 text-xs">
+                  <p className="text-xs text-[var(--sqm-text-secondary)] font-medium">Score Breakdown:</p>
+                  <div className="grid grid-cols-2 gap-1 text-xs text-[var(--sqm-text-secondary)]">
                     <div className="flex justify-between">
                       <span>Shape</span>
                       <span>{image.scoreBreakdown.building_shape}/20</span>
@@ -119,7 +119,7 @@ export function ImageGallery({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1"
+                  className="flex-1 border-[var(--sqm-border-light)] text-[var(--sqm-text-secondary)] hover:text-[var(--sqm-text-primary)] hover:border-[var(--sqm-green)]"
                   onClick={() => {
                     const a = document.createElement("a");
                     a.href = image.url;
@@ -133,6 +133,7 @@ export function ImageGallery({
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-[var(--sqm-border-light)] text-[var(--sqm-text-secondary)] hover:text-[var(--sqm-text-primary)] hover:border-[var(--sqm-green)]"
                     onClick={() => onRegenerate(image.id)}
                   >
                     Regenerate
