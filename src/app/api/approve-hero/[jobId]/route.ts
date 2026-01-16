@@ -4,7 +4,7 @@ import { spawn } from "child_process";
 import path from "path";
 
 const OUTPUT_DIR = process.env.OUTPUT_DIR || "./generated-images";
-const UPLOADS_DIR = process.env.UPLOADS_DIR || "./uploads";
+const UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
 
 interface ApprovalRequest {
   action: "approve" | "reject" | "regenerate";
@@ -199,7 +199,7 @@ export async function POST(
         await writeFile(statusPath, JSON.stringify(updatedStatus, null, 2));
 
         // Get original inspiration path from uploads
-        const uploadsDir = path.join(process.cwd(), UPLOADS_DIR, jobId);
+        const uploadsDir = path.join(process.cwd(), UPLOAD_DIR, jobId);
         const inspirationFilename = manifest.inspiration?.filename || status.inspiration?.filename;
 
         if (!inspirationFilename) {

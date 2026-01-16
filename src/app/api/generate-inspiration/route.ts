@@ -5,7 +5,7 @@ import path from "path";
 import { randomUUID } from "crypto";
 
 const OUTPUT_DIR = process.env.OUTPUT_DIR || "./generated-images";
-const UPLOADS_DIR = process.env.UPLOADS_DIR || "./uploads";
+const UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const jobId = randomUUID();
 
     // Create directories
-    const uploadsDir = path.join(process.cwd(), UPLOADS_DIR, jobId);
+    const uploadsDir = path.join(process.cwd(), UPLOAD_DIR, jobId);
     const outputDir = path.join(process.cwd(), OUTPUT_DIR, jobId);
     await mkdir(uploadsDir, { recursive: true });
     await mkdir(outputDir, { recursive: true });
