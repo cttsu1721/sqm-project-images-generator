@@ -7,6 +7,12 @@ import { randomUUID } from "crypto";
 const OUTPUT_DIR = process.env.OUTPUT_DIR || "./generated-images";
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
 
+// Helper to resolve directory paths - handles both absolute and relative paths
+const resolveDir = (dir: string, ...segments: string[]) =>
+  path.isAbsolute(dir)
+    ? path.join(dir, ...segments)
+    : path.join(process.cwd(), dir, ...segments);
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -33,9 +39,9 @@ export async function POST(request: NextRequest) {
     // Generate job ID
     const jobId = randomUUID();
 
-    // Create directories
-    const uploadsDir = path.join(process.cwd(), UPLOAD_DIR, jobId);
-    const outputDir = path.join(process.cwd(), OUTPUT_DIR, jobId);
+    // Create directories - handles both absolute and relative paths
+    const uploadsDir = resolveDir(UPLOAD_DIR, jobId);
+    const outputDir = resolveDir(OUTPUT_DIR, jobId);
     await mkdir(uploadsDir, { recursive: true });
     await mkdir(outputDir, { recursive: true });
 

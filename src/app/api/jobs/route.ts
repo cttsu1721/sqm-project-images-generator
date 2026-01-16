@@ -4,6 +4,12 @@ import path from "path";
 
 const OUTPUT_DIR = process.env.OUTPUT_DIR || "./generated-images";
 
+// Helper to resolve directory paths - handles both absolute and relative paths
+const resolveDir = (dir: string, ...segments: string[]) =>
+  path.isAbsolute(dir)
+    ? path.join(dir, ...segments)
+    : path.join(process.cwd(), dir, ...segments);
+
 export interface JobSummary {
   jobId: string;
   prompt: string;
@@ -18,7 +24,7 @@ export interface JobSummary {
 
 export async function GET() {
   try {
-    const baseDir = path.join(process.cwd(), OUTPUT_DIR);
+    const baseDir = resolveDir(OUTPUT_DIR);
 
     let dirs: string[];
     try {

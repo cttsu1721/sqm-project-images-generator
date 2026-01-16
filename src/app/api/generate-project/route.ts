@@ -6,6 +6,12 @@ import { randomUUID } from "crypto";
 
 const OUTPUT_DIR = process.env.OUTPUT_DIR || "./generated-images";
 
+// Helper to resolve directory paths - handles both absolute and relative paths
+const resolveDir = (dir: string, ...segments: string[]) =>
+  path.isAbsolute(dir)
+    ? path.join(dir, ...segments)
+    : path.join(process.cwd(), dir, ...segments);
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -29,7 +35,7 @@ export async function POST(request: NextRequest) {
     const jobId = randomUUID();
 
     // Create output directory
-    const outputDir = path.join(process.cwd(), OUTPUT_DIR, jobId);
+    const outputDir = resolveDir(OUTPUT_DIR, jobId);
     await mkdir(outputDir, { recursive: true });
 
     // Create initial status file

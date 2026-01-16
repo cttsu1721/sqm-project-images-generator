@@ -6,6 +6,12 @@ import { PassThrough } from "stream";
 
 const OUTPUT_DIR = process.env.OUTPUT_DIR || "./generated-images";
 
+// Helper to resolve directory paths - handles both absolute and relative paths
+const resolveDir = (dir: string, ...segments: string[]) =>
+  path.isAbsolute(dir)
+    ? path.join(dir, ...segments)
+    : path.join(process.cwd(), dir, ...segments);
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
@@ -20,7 +26,7 @@ export async function GET(
       );
     }
 
-    const jobDir = path.join(process.cwd(), OUTPUT_DIR, jobId);
+    const jobDir = resolveDir(OUTPUT_DIR, jobId);
 
     // Check if job directory exists
     try {

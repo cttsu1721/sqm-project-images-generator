@@ -4,6 +4,12 @@ import path from "path";
 
 const OUTPUT_DIR = process.env.OUTPUT_DIR || "./generated-images";
 
+// Helper to resolve directory paths - handles both absolute and relative paths
+const resolveDir = (dir: string, ...segments: string[]) =>
+  path.isAbsolute(dir)
+    ? path.join(dir, ...segments)
+    : path.join(process.cwd(), dir, ...segments);
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
@@ -18,7 +24,7 @@ export async function GET(
       );
     }
 
-    const statusPath = path.join(process.cwd(), OUTPUT_DIR, jobId, "status.json");
+    const statusPath = resolveDir(OUTPUT_DIR, jobId, "status.json");
 
     // Check if status file exists
     try {
@@ -35,7 +41,7 @@ export async function GET(
     const status = JSON.parse(statusContent);
 
     // Also check for manifest to get images and project info
-    const manifestPath = path.join(process.cwd(), OUTPUT_DIR, jobId, "manifest.json");
+    const manifestPath = resolveDir(OUTPUT_DIR, jobId, "manifest.json");
     try {
       await access(manifestPath);
       const manifestContent = await readFile(manifestPath, "utf-8");

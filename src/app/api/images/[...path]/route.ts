@@ -4,6 +4,12 @@ import path from "path";
 
 const OUTPUT_DIR = process.env.OUTPUT_DIR || "./generated-images";
 
+// Helper to resolve directory paths - handles both absolute and relative paths
+const resolveDir = (dir: string, ...segments: string[]) =>
+  path.isAbsolute(dir)
+    ? path.join(dir, ...segments)
+    : path.join(process.cwd(), dir, ...segments);
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -19,11 +25,11 @@ export async function GET(
     }
 
     // Construct file path from segments
-    const filePath = path.join(process.cwd(), OUTPUT_DIR, ...pathSegments);
+    const filePath = resolveDir(OUTPUT_DIR, ...pathSegments);
 
     // Security: Ensure path is within OUTPUT_DIR
     const normalizedPath = path.normalize(filePath);
-    const outputDirPath = path.join(process.cwd(), OUTPUT_DIR);
+    const outputDirPath = resolveDir(OUTPUT_DIR);
     if (!normalizedPath.startsWith(outputDirPath)) {
       return NextResponse.json(
         { error: "Access denied" },

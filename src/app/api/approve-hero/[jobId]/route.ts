@@ -6,6 +6,12 @@ import path from "path";
 const OUTPUT_DIR = process.env.OUTPUT_DIR || "./generated-images";
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
 
+// Helper to resolve directory paths - handles both absolute and relative paths
+const resolveDir = (dir: string, ...segments: string[]) =>
+  path.isAbsolute(dir)
+    ? path.join(dir, ...segments)
+    : path.join(process.cwd(), dir, ...segments);
+
 interface ApprovalRequest {
   action: "approve" | "reject" | "regenerate";
   feedback?: string;
@@ -34,7 +40,7 @@ export async function POST(
       );
     }
 
-    const outputDir = path.join(process.cwd(), OUTPUT_DIR, jobId);
+    const outputDir = resolveDir(OUTPUT_DIR, jobId);
     const statusPath = path.join(outputDir, "status.json");
     const manifestPath = path.join(outputDir, "manifest.json");
 
@@ -199,7 +205,7 @@ export async function POST(
         await writeFile(statusPath, JSON.stringify(updatedStatus, null, 2));
 
         // Get original inspiration path from uploads
-        const uploadsDir = path.join(process.cwd(), UPLOAD_DIR, jobId);
+        const uploadsDir = resolveDir(UPLOAD_DIR, jobId);
         const inspirationFilename = manifest.inspiration?.filename || status.inspiration?.filename;
 
         if (!inspirationFilename) {
