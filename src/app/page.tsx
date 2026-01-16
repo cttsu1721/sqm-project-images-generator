@@ -1,16 +1,30 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { ProjectPromptInput, GenerationParams } from "@/components/ProjectPromptInput";
+import { InspirationUploader, InspirationParams } from "@/components/InspirationUploader";
+import { HeroApproval } from "@/components/HeroApproval";
 import { GenerationProgress, GenerationStatus } from "@/components/GenerationProgress";
 import { ShowcaseGallery, ShowcaseImage } from "@/components/ShowcaseGallery";
 import { Button } from "@/components/ui/button";
-import { Wand2, Upload } from "lucide-react";
+import { Wand2, ImageIcon, Type } from "lucide-react";
+
+type FlowType = "text" | "inspiration";
+
+interface InspirationData {
+  imagePath: string;
+  styleAnalysis?: Record<string, unknown>;
+}
+
+interface HeroData {
+  imagePath: string;
+  filename: string;
+}
 
 export default function GeneratePage() {
+  const [flowType, setFlowType] = useState<FlowType>("text");
   const [status, setStatus] = useState<GenerationStatus>({
     status: "idle",
     progress: 0,
@@ -24,7 +38,11 @@ export default function GeneratePage() {
     projectType?: string;
   } | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [inspirationData, setInspirationData] = useState<InspirationData | null>(null);
+  const [heroData, setHeroData] = useState<HeroData | null>(null);
+  const [isApprovalLoading, setIsApprovalLoading] = useState(false);
 
+  // Text prompt generation handler
   const handleGenerate = useCallback(async (params: GenerationParams) => {
     const { prompt, projectType, suburb } = params;
 
@@ -36,6 +54,7 @@ export default function GeneratePage() {
       currentImage: 0,
       totalImages: 18,
       message: "Analyzing project description...",
+      flowType: "text",
     });
 
     try {
@@ -64,6 +83,55 @@ export default function GeneratePage() {
     }
   }, []);
 
+  // Inspiration-based generation handler
+  const handleInspirationGenerate = useCallback(async (params: InspirationParams) => {
+    const { inspirationImage, prompt, projectType, suburb } = params;
+
+    setGeneratedImages([]);
+    setInspirationData(null);
+    setHeroData(null);
+    setProjectInfo({ prompt: prompt || "", projectType, suburb });
+    setStatus({
+      status: "generating_inspiration_hero",
+      progress: 2,
+      currentImage: 0,
+      totalImages: 18,
+      message: "Analyzing inspiration style...",
+      flowType: "inspiration",
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("inspirationImage", inspirationImage);
+      if (prompt) formData.append("prompt", prompt);
+      if (projectType) formData.append("projectType", projectType);
+      if (suburb) formData.append("suburb", suburb);
+
+      const response = await fetch("/api/generate-inspiration", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to start inspiration-based generation");
+      }
+
+      const data = await response.json();
+      setJobId(data.jobId);
+      pollStatus(data.jobId);
+    } catch (error) {
+      console.error("Error:", error);
+      setStatus({
+        status: "error",
+        progress: 0,
+        currentImage: 0,
+        totalImages: 0,
+        message: "Failed to start inspiration-based generation. Please try again.",
+      });
+    }
+  }, []);
+
+  // Polling function that handles both flows
   const pollStatus = useCallback(async (id: string) => {
     const poll = async () => {
       try {
@@ -77,6 +145,7 @@ export default function GeneratePage() {
           totalImages: data.totalImages,
           currentVariation: data.currentVariation,
           message: data.message,
+          flowType: data.flowType,
         });
 
         if (data.parsed) {
@@ -87,11 +156,37 @@ export default function GeneratePage() {
           }));
         }
 
+        // Handle inspiration flow data
+        if (data.inspiration) {
+          setInspirationData({
+            imagePath: data.inspiration.imagePath,
+            styleAnalysis: data.inspiration.styleAnalysis,
+          });
+        }
+
+        if (data.hero) {
+          setHeroData({
+            imagePath: data.hero.imagePath,
+            filename: data.hero.filename,
+          });
+        }
+
         if (data.images) {
           setGeneratedImages(data.images);
         }
 
-        if (data.status !== "complete" && data.status !== "error") {
+        // Continue polling for active statuses
+        const activeStatuses = [
+          "parsing",
+          "analyzing",
+          "generating_hero",
+          "generating",
+          "verifying",
+          "generating_inspiration_hero",
+          "regenerating_hero",
+        ];
+
+        if (activeStatuses.includes(data.status)) {
           setTimeout(poll, 2000);
         }
       } catch (error) {
@@ -101,6 +196,93 @@ export default function GeneratePage() {
 
     poll();
   }, []);
+
+  // Approval handlers
+  const handleApproveHero = useCallback(async () => {
+    if (!jobId) return;
+
+    setIsApprovalLoading(true);
+    try {
+      const response = await fetch(`/api/approve-hero/${jobId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve" }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to approve hero");
+      }
+
+      // Resume polling
+      pollStatus(jobId);
+    } catch (error) {
+      console.error("Approval error:", error);
+      setStatus({
+        status: "error",
+        progress: 0,
+        currentImage: 0,
+        totalImages: 0,
+        message: "Failed to approve hero. Please try again.",
+      });
+    } finally {
+      setIsApprovalLoading(false);
+    }
+  }, [jobId, pollStatus]);
+
+  const handleRejectHero = useCallback(async () => {
+    if (!jobId) return;
+
+    setIsApprovalLoading(true);
+    try {
+      const response = await fetch(`/api/approve-hero/${jobId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reject" }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to reject hero");
+      }
+
+      // Reset to idle state
+      handleReset();
+    } catch (error) {
+      console.error("Rejection error:", error);
+    } finally {
+      setIsApprovalLoading(false);
+    }
+  }, [jobId]);
+
+  const handleRegenerateHero = useCallback(async (feedback: string) => {
+    if (!jobId) return;
+
+    setIsApprovalLoading(true);
+    try {
+      const response = await fetch(`/api/approve-hero/${jobId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "regenerate", feedback }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to regenerate hero");
+      }
+
+      // Resume polling
+      pollStatus(jobId);
+    } catch (error) {
+      console.error("Regeneration error:", error);
+      setStatus({
+        status: "error",
+        progress: 0,
+        currentImage: 0,
+        totalImages: 0,
+        message: "Failed to regenerate hero. Please try again.",
+      });
+    } finally {
+      setIsApprovalLoading(false);
+    }
+  }, [jobId, pollStatus]);
 
   const handleDownloadAll = useCallback(async () => {
     if (!jobId) return;
@@ -169,18 +351,26 @@ export default function GeneratePage() {
     setGeneratedImages([]);
     setProjectInfo(null);
     setJobId(null);
+    setInspirationData(null);
+    setHeroData(null);
+    setIsApprovalLoading(false);
   };
 
   const isGenerating =
     status.status !== "idle" &&
     status.status !== "complete" &&
-    status.status !== "error";
+    status.status !== "error" &&
+    status.status !== "awaiting_approval" &&
+    status.status !== "rejected";
+
+  const showInput = status.status === "idle" || status.status === "error" || status.status === "rejected";
+  const showApproval = status.status === "awaiting_approval" && heroData && inspirationData;
 
   return (
     <AppShell>
       <PageHeader
         title="Generate Project"
-        subtitle="Create a complete architect's showcase package from a text description. 18 photorealistic images covering hero shots, site context, features, interiors, and lifestyle."
+        subtitle="Create a complete architect's showcase package. 18 photorealistic images covering hero shots, site context, features, interiors, and lifestyle."
         actions={
           status.status === "complete" ? (
             <Button
@@ -195,10 +385,60 @@ export default function GeneratePage() {
         }
       />
 
+      {/* Flow Type Toggle - only show when idle */}
+      {showInput && (
+        <div className="mb-6">
+          <div className="inline-flex rounded-lg border border-[var(--sqm-border-light)] p-1 bg-[var(--sqm-bg-elevated)]">
+            <button
+              onClick={() => setFlowType("text")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                flowType === "text"
+                  ? "bg-[var(--sqm-green)] text-white"
+                  : "text-[var(--sqm-text-secondary)] hover:text-[var(--sqm-text-primary)]"
+              }`}
+            >
+              <Type className="w-4 h-4" />
+              Text Prompt
+            </button>
+            <button
+              onClick={() => setFlowType("inspiration")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                flowType === "inspiration"
+                  ? "bg-[var(--sqm-green)] text-white"
+                  : "text-[var(--sqm-text-secondary)] hover:text-[var(--sqm-text-primary)]"
+              }`}
+            >
+              <ImageIcon className="w-4 h-4" />
+              Inspiration Image
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Input Section */}
-      {(status.status === "idle" || status.status === "error") && (
+      {showInput && (
         <div className="mb-8">
-          <ProjectPromptInput onGenerate={handleGenerate} disabled={isGenerating} />
+          {flowType === "text" ? (
+            <ProjectPromptInput onGenerate={handleGenerate} disabled={isGenerating} />
+          ) : (
+            <InspirationUploader onGenerate={handleInspirationGenerate} disabled={isGenerating} />
+          )}
+        </div>
+      )}
+
+      {/* Hero Approval Section */}
+      {showApproval && (
+        <div className="mb-8">
+          <HeroApproval
+            jobId={jobId!}
+            inspirationImagePath={inspirationData.imagePath}
+            heroImagePath={heroData.imagePath}
+            styleAnalysis={inspirationData.styleAnalysis as Record<string, unknown> | undefined}
+            onApprove={handleApproveHero}
+            onReject={handleRejectHero}
+            onRegenerate={handleRegenerateHero}
+            isLoading={isApprovalLoading}
+          />
         </div>
       )}
 
@@ -234,6 +474,37 @@ export default function GeneratePage() {
               </p>
               <p className="text-sm text-[var(--sqm-text-muted)]">
                 {status.message}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rejected Message */}
+      {status.status === "rejected" && (
+        <div className="mb-8 sqm-card p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <svg
+                className="w-5 h-5 text-amber-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </div>
+            <div>
+              <p className="font-medium text-[var(--sqm-text-primary)]">
+                Hero Rejected
+              </p>
+              <p className="text-sm text-[var(--sqm-text-muted)]">
+                Try uploading a different inspiration image to generate a new hero.
               </p>
             </div>
           </div>

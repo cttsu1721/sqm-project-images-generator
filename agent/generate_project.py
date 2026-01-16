@@ -675,7 +675,8 @@ def main(
     output_dir: str,
     job_id: str,
     project_type: Optional[str] = None,
-    suburb_override: Optional[str] = None
+    suburb_override: Optional[str] = None,
+    from_hero: Optional[str] = None
 ):
     """Main generation workflow.
 
@@ -685,6 +686,7 @@ def main(
         job_id: Unique job identifier
         project_type: Optional override for project type (from dropdown)
         suburb_override: Optional override for suburb (from dropdown)
+        from_hero: Optional path to pre-approved hero image (skips hero generation)
     """
     print(f"Starting project generation for job {job_id}")
     print(f"User prompt: {user_prompt[:100]}...")
@@ -693,6 +695,8 @@ def main(
         print(f"Project type (from dropdown): {project_type}")
     if suburb_override:
         print(f"Suburb (from dropdown): {suburb_override}")
+    if from_hero:
+        print(f"Using pre-approved hero: {from_hero}")
 
     # Create output directory
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -767,55 +771,109 @@ def main(
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
 
-    # Generate hero image first
-    print("\n[2/4] Generating hero image...")
-    update_status(job_id, output_dir, {
-        "status": "generating_hero",
-        "progress": 5,
-        "currentImage": 1,
-        "totalImages": 18,
-        "currentVariation": "hero_facade",
-        "message": "Generating primary facade (hero image)..."
-    })
-
-    hero_prompt = build_hero_generation_prompt(user_prompt, parsed, suburb_context)
+    # Generate or use pre-approved hero image
     hero_aspect_ratio = get_aspect_ratio_for_shot("hero_facade")
-    hero_image_data = generate_image(hero_prompt, aspect_ratio=hero_aspect_ratio)
-
-    if not hero_image_data:
-        print("  ERROR: Failed to generate hero image")
-        update_status(job_id, output_dir, {
-            "status": "error",
-            "message": "Failed to generate hero image"
-        })
-        return
-
-    # Save hero image
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    hero_filename = f"hero_facade_{timestamp}.png"
-    hero_path = Path(output_dir) / hero_filename
 
-    with open(hero_path, "wb") as f:
-        f.write(hero_image_data)
+    if from_hero and os.path.exists(from_hero):
+        # Use pre-approved hero image (from inspiration flow)
+        print("\n[2/4] Using pre-approved hero image...")
+        update_status(job_id, output_dir, {
+            "status": "generating",
+            "progress": 10,
+            "currentImage": 1,
+            "totalImages": total_shots,
+            "currentVariation": "hero_facade",
+            "message": "Using approved hero image..."
+        })
 
-    print(f"  Saved hero image: {hero_filename}")
+        hero_path = Path(from_hero)
+        hero_filename = hero_path.name
 
-    # Add hero to manifest
-    hero_entry = {
-        "id": f"{job_id}_1",
-        "filename": hero_filename,
-        "url": f"/api/images/{job_id}/{hero_filename}",
-        "variationType": "hero_facade",
-        "category": "hero_shots",
-        "name": "Primary Facade",
-        "isHero": True,
-        "consistencyScore": 100,  # Hero is always 100% consistent with itself
-        "attempts": 1,
-        "lowConfidence": False,
-        "aspectRatio": hero_aspect_ratio,
-        "created_at": datetime.now().isoformat()
-    }
-    save_image_to_manifest(job_id, output_dir, hero_entry)
+        # If hero is not already in output dir, copy it
+        output_hero_path = Path(output_dir) / hero_filename
+        if str(hero_path) != str(output_hero_path):
+            import shutil
+            shutil.copy2(hero_path, output_hero_path)
+            hero_path = output_hero_path
+
+        print(f"  Using hero image: {hero_filename}")
+
+        # Add hero to manifest (it may already be there from inspiration flow)
+        hero_entry = {
+            "id": f"{job_id}_1",
+            "filename": hero_filename,
+            "url": f"/api/images/{job_id}/{hero_filename}",
+            "variationType": "hero_facade",
+            "category": "hero_shots",
+            "name": "Primary Facade",
+            "isHero": True,
+            "consistencyScore": 100,
+            "attempts": 1,
+            "lowConfidence": False,
+            "aspectRatio": hero_aspect_ratio,
+            "created_at": datetime.now().isoformat()
+        }
+
+        # Check if manifest already has images (from inspiration flow)
+        manifest_path = Path(output_dir) / "manifest.json"
+        if manifest_path.exists():
+            with open(manifest_path, "r") as f:
+                existing_manifest = json.load(f)
+            # Only add hero if not already in images
+            if not any(img.get("isHero") for img in existing_manifest.get("images", [])):
+                save_image_to_manifest(job_id, output_dir, hero_entry)
+        else:
+            save_image_to_manifest(job_id, output_dir, hero_entry)
+
+    else:
+        # Generate new hero image
+        print("\n[2/4] Generating hero image...")
+        update_status(job_id, output_dir, {
+            "status": "generating_hero",
+            "progress": 5,
+            "currentImage": 1,
+            "totalImages": 18,
+            "currentVariation": "hero_facade",
+            "message": "Generating primary facade (hero image)..."
+        })
+
+        hero_prompt = build_hero_generation_prompt(user_prompt, parsed, suburb_context)
+        hero_image_data = generate_image(hero_prompt, aspect_ratio=hero_aspect_ratio)
+
+        if not hero_image_data:
+            print("  ERROR: Failed to generate hero image")
+            update_status(job_id, output_dir, {
+                "status": "error",
+                "message": "Failed to generate hero image"
+            })
+            return
+
+        # Save hero image
+        hero_filename = f"hero_facade_{timestamp}.png"
+        hero_path = Path(output_dir) / hero_filename
+
+        with open(hero_path, "wb") as f:
+            f.write(hero_image_data)
+
+        print(f"  Saved hero image: {hero_filename}")
+
+        # Add hero to manifest
+        hero_entry = {
+            "id": f"{job_id}_1",
+            "filename": hero_filename,
+            "url": f"/api/images/{job_id}/{hero_filename}",
+            "variationType": "hero_facade",
+            "category": "hero_shots",
+            "name": "Primary Facade",
+            "isHero": True,
+            "consistencyScore": 100,  # Hero is always 100% consistent with itself
+            "attempts": 1,
+            "lowConfidence": False,
+            "aspectRatio": hero_aspect_ratio,
+            "created_at": datetime.now().isoformat()
+        }
+        save_image_to_manifest(job_id, output_dir, hero_entry)
 
     # Get hero description for consistency
     print("\n[3/4] Analyzing hero image for consistency reference...")
@@ -975,6 +1033,10 @@ if __name__ == "__main__":
         "--suburb",
         help="Override suburb (from dropdown selection)"
     )
+    parser.add_argument(
+        "--from-hero",
+        help="Path to pre-approved hero image (skips hero generation)"
+    )
 
     args = parser.parse_args()
 
@@ -983,5 +1045,6 @@ if __name__ == "__main__":
         output_dir=args.output_dir,
         job_id=args.job_id,
         project_type=args.project_type,
-        suburb_override=args.suburb
+        suburb_override=args.suburb,
+        from_hero=args.from_hero
     )

@@ -4,12 +4,26 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
 export interface GenerationStatus {
-  status: "idle" | "parsing" | "analyzing" | "generating_hero" | "generating" | "verifying" | "complete" | "error";
+  status:
+    | "idle"
+    | "parsing"
+    | "analyzing"
+    | "generating_hero"
+    | "generating"
+    | "verifying"
+    | "complete"
+    | "error"
+    // Inspiration flow statuses
+    | "generating_inspiration_hero"
+    | "awaiting_approval"
+    | "regenerating_hero"
+    | "rejected";
   progress: number;
   currentImage: number;
   totalImages: number;
   currentVariation?: string;
   message?: string;
+  flowType?: "text" | "inspiration";
 }
 
 interface GenerationProgressProps {
@@ -17,7 +31,8 @@ interface GenerationProgressProps {
 }
 
 export function GenerationProgress({ status }: GenerationProgressProps) {
-  if (status.status === "idle") {
+  if (status.status === "idle" || status.status === "awaiting_approval") {
+    // Don't show progress bar during approval - HeroApproval component handles this
     return null;
   }
 
@@ -37,6 +52,15 @@ export function GenerationProgress({ status }: GenerationProgressProps) {
         return "bg-[var(--sqm-green)]";
       case "error":
         return "bg-red-500";
+      // Inspiration flow statuses
+      case "generating_inspiration_hero":
+        return "bg-purple-500";
+      case "awaiting_approval":
+        return "bg-amber-500";
+      case "regenerating_hero":
+        return "bg-orange-500";
+      case "rejected":
+        return "bg-red-400";
       default:
         return "bg-[var(--sqm-text-muted)]";
     }
@@ -58,6 +82,15 @@ export function GenerationProgress({ status }: GenerationProgressProps) {
         return "Generation complete!";
       case "error":
         return "Error occurred";
+      // Inspiration flow statuses
+      case "generating_inspiration_hero":
+        return "Analyzing inspiration & generating hero...";
+      case "awaiting_approval":
+        return "Hero ready for your approval";
+      case "regenerating_hero":
+        return "Regenerating hero with your feedback...";
+      case "rejected":
+        return "Hero rejected";
       default:
         return "Processing...";
     }

@@ -31,6 +31,12 @@ from .photorealistic import (
     get_lighting_for_shot
 )
 
+from .style_transfer import (
+    build_style_analysis_prompt,
+    build_style_transfer_hero_prompt,
+    build_regeneration_prompt_with_feedback
+)
+
 __all__ = [
     # Melbourne suburbs
     "MELBOURNE_SUBURBS",
@@ -52,4 +58,8 @@ __all__ = [
     "LIGHTING_CONDITIONS",
     "build_photorealistic_prompt",
     "get_lighting_for_shot",
+    # Style transfer
+    "build_style_analysis_prompt",
+    "build_style_transfer_hero_prompt",
+    "build_regeneration_prompt_with_feedback",
 ]
