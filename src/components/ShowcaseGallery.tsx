@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -125,7 +124,6 @@ export function ShowcaseGallery({
     setRegeneratingId(imageId);
     try {
       await onRegenerateImage(imageId);
-      // Close modal after successful regeneration
       setSelectedImage(null);
     } catch (error) {
       console.error("Regeneration failed:", error);
@@ -145,7 +143,6 @@ export function ShowcaseGallery({
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        // Get filename from Content-Disposition header or use default
         const contentDisposition = response.headers.get("Content-Disposition");
         const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
         a.download = filenameMatch ? filenameMatch[1] : `showcase-${jobId}.pdf`;
@@ -172,18 +169,18 @@ export function ShowcaseGallery({
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold">Architect's Showcase Package</h2>
+          <h2 className="text-2xl font-serif font-semibold text-[var(--sqm-text-primary)]">Architect's Showcase Package</h2>
           {projectInfo && (
-            <p className="text-sm text-gray-500 mt-1 max-w-2xl">
+            <p className="text-sm text-[var(--sqm-text-muted)] mt-1 max-w-2xl">
               {projectInfo.prompt}
             </p>
           )}
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-600">
-            <span className="font-medium">{totalImages}</span> images |{" "}
-            <span className="font-medium">{passedImages}</span> passed |{" "}
-            Avg: <span className="font-medium">{averageScore}%</span>
+          <div className="text-sm text-[var(--sqm-text-secondary)]">
+            <span className="font-medium text-[var(--sqm-text-primary)]">{totalImages}</span> images |{" "}
+            <span className="font-medium text-[var(--sqm-green)]">{passedImages}</span> passed |{" "}
+            Avg: <span className="font-medium text-[var(--sqm-text-primary)]">{averageScore}%</span>
           </div>
           <div className="flex gap-2">
             {jobId && (
@@ -191,52 +188,13 @@ export function ShowcaseGallery({
                 variant="outline"
                 onClick={handleExportPdf}
                 disabled={exportingPdf}
+                className="border-[var(--sqm-border-light)] text-[var(--sqm-text-secondary)] hover:text-[var(--sqm-text-primary)] hover:border-[var(--sqm-green)]"
               >
-                {exportingPdf ? (
-                  <>
-                    <svg
-                      className="w-4 h-4 mr-2 animate-spin"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Export PDF
-                  </>
-                )}
+                {exportingPdf ? "Exporting..." : "Export PDF"}
               </Button>
             )}
             {onDownloadAll && (
-              <Button onClick={onDownloadAll}>
+              <Button onClick={onDownloadAll} className="sqm-button">
                 Download All as ZIP
               </Button>
             )}
@@ -254,15 +212,15 @@ export function ShowcaseGallery({
           if (!categoryImages || categoryImages.length === 0) return null;
 
           return (
-            <div key={category} className="border rounded-lg overflow-hidden">
+            <div key={category} className="sqm-card overflow-hidden">
               {/* Category Header */}
               <button
                 onClick={() => toggleCategory(category)}
-                className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-[var(--sqm-bg-elevated)] hover:bg-[var(--sqm-bg-secondary)] transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <svg
-                    className="w-6 h-6 text-gray-600"
+                    className="w-6 h-6 text-[var(--sqm-green)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -275,14 +233,16 @@ export function ShowcaseGallery({
                     />
                   </svg>
                   <div className="text-left">
-                    <h3 className="font-semibold text-gray-900">{info.name}</h3>
-                    <p className="text-sm text-gray-500">{info.description}</p>
+                    <h3 className="font-semibold text-[var(--sqm-text-primary)]">{info.name}</h3>
+                    <p className="text-sm text-[var(--sqm-text-muted)]">{info.description}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge variant="outline">{categoryImages.length} images</Badge>
+                  <Badge variant="outline" className="border-[var(--sqm-border-light)] text-[var(--sqm-text-secondary)]">
+                    {categoryImages.length} images
+                  </Badge>
                   <svg
-                    className={`w-5 h-5 text-gray-400 transition-transform ${
+                    className={`w-5 h-5 text-[var(--sqm-text-muted)] transition-transform ${
                       isExpanded ? "rotate-180" : ""
                     }`}
                     fill="none"
@@ -301,12 +261,12 @@ export function ShowcaseGallery({
 
               {/* Category Images */}
               {isExpanded && (
-                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 bg-[var(--sqm-bg-secondary)]">
                   {categoryImages.map((image) => (
-                    <Card
+                    <div
                       key={image.id}
-                      className={`overflow-hidden cursor-pointer transition-shadow hover:shadow-lg ${
-                        image.isHero ? "ring-2 ring-blue-500" : ""
+                      className={`sqm-card overflow-hidden cursor-pointer transition-all hover:shadow-lg ${
+                        image.isHero ? "ring-2 ring-[var(--sqm-green)]" : ""
                       }`}
                       onClick={() => setSelectedImage(image)}
                     >
@@ -318,7 +278,7 @@ export function ShowcaseGallery({
                         />
                         {image.isHero && (
                           <div className="absolute top-2 left-2">
-                            <Badge className="bg-blue-500">Hero</Badge>
+                            <Badge className="bg-[var(--sqm-green)]">Hero</Badge>
                           </div>
                         )}
                         {image.lowConfidence && (
@@ -333,12 +293,12 @@ export function ShowcaseGallery({
                         </div>
                       </div>
                       <div className="p-3">
-                        <p className="font-medium text-sm text-gray-900">{image.name}</p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="font-medium text-sm text-[var(--sqm-text-primary)]">{image.name}</p>
+                        <p className="text-xs text-[var(--sqm-text-muted)] mt-1">
                           {image.attempts} attempt{image.attempts !== 1 ? "s" : ""}
                         </p>
                       </div>
-                    </Card>
+                    </div>
                   ))}
                 </div>
               )}
@@ -350,11 +310,11 @@ export function ShowcaseGallery({
       {/* Image Modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto"
+            className="bg-[var(--sqm-bg-secondary)] border border-[var(--sqm-border)] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative">
@@ -375,13 +335,13 @@ export function ShowcaseGallery({
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-semibold">{selectedImage.name}</h3>
-                  <p className="text-gray-500 capitalize">
+                  <h3 className="text-xl font-semibold text-[var(--sqm-text-primary)]">{selectedImage.name}</h3>
+                  <p className="text-[var(--sqm-text-muted)] capitalize">
                     {selectedImage.category.replace(/_/g, " ")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {selectedImage.isHero && <Badge className="bg-blue-500">Hero</Badge>}
+                  {selectedImage.isHero && <Badge className="bg-[var(--sqm-green)]">Hero</Badge>}
                   {selectedImage.lowConfidence && (
                     <Badge variant="destructive">Low Confidence</Badge>
                   )}
@@ -392,15 +352,15 @@ export function ShowcaseGallery({
               </div>
 
               {selectedImage.scoreBreakdown && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                <div className="bg-[var(--sqm-bg-elevated)] border border-[var(--sqm-border)] rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-[var(--sqm-text-secondary)] mb-3">
                     Consistency Score Breakdown
                   </h4>
                   <div className="grid grid-cols-5 gap-4">
                     {Object.entries(selectedImage.scoreBreakdown).map(([key, value]) => (
                       <div key={key} className="text-center">
-                        <div className="text-lg font-semibold">{value}/20</div>
-                        <div className="text-xs text-gray-500 capitalize">
+                        <div className="text-lg font-semibold text-[var(--sqm-text-primary)]">{value}/20</div>
+                        <div className="text-xs text-[var(--sqm-text-muted)] capitalize">
                           {key.replace(/_/g, " ")}
                         </div>
                       </div>
@@ -411,7 +371,7 @@ export function ShowcaseGallery({
 
               <div className="flex gap-3">
                 <Button
-                  className="flex-1"
+                  className="flex-1 sqm-button"
                   onClick={() => {
                     const a = document.createElement("a");
                     a.href = selectedImage.url;
@@ -421,60 +381,23 @@ export function ShowcaseGallery({
                 >
                   Download Image
                 </Button>
-                {/* Regenerate button for low-confidence non-hero images */}
                 {selectedImage.lowConfidence &&
                   !selectedImage.isHero &&
                   onRegenerateImage && (
                     <Button
                       variant="outline"
-                      className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                      className="border-amber-500 text-amber-400 hover:bg-amber-500/10"
                       onClick={() => handleRegenerate(selectedImage.id)}
                       disabled={regeneratingId === selectedImage.id}
                     >
-                      {regeneratingId === selectedImage.id ? (
-                        <>
-                          <svg
-                            className="w-4 h-4 mr-2 animate-spin"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                            />
-                          </svg>
-                          Regenerating...
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="w-4 h-4 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                          </svg>
-                          Regenerate
-                        </>
-                      )}
+                      {regeneratingId === selectedImage.id ? "Regenerating..." : "Regenerate"}
                     </Button>
                   )}
-                <Button variant="outline" onClick={() => setSelectedImage(null)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedImage(null)}
+                  className="border-[var(--sqm-border-light)] text-[var(--sqm-text-secondary)]"
+                >
                   Close
                 </Button>
               </div>

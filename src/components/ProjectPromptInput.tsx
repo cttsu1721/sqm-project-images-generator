@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MELBOURNE_SUBURBS, PROJECT_TYPES, SUBURBS_BY_REGION } from "@/lib/data/suburbs";
 
@@ -82,20 +81,20 @@ export function ProjectPromptInput({ onGenerate, disabled }: ProjectPromptInputP
 
   return (
     <div className="space-y-6">
-      <Card className={`p-6 ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`sqm-card p-6 ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Quick-select dropdowns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="projectType" className="block text-sm font-medium text-gray-700 mb-2">
-                Project Type <span className="text-gray-400">(optional)</span>
+              <label htmlFor="projectType" className="block text-sm font-medium text-[var(--sqm-text-primary)] mb-2">
+                Project Type <span className="text-[var(--sqm-text-muted)]">(optional)</span>
               </label>
               <select
                 id="projectType"
                 value={projectType}
                 onChange={(e) => setProjectType(e.target.value)}
                 disabled={disabled}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                className="w-full px-4 py-3 border border-[var(--sqm-border-light)] rounded-lg focus:ring-2 focus:ring-[var(--sqm-green)] focus:border-[var(--sqm-green)] bg-[var(--sqm-bg-elevated)] text-[var(--sqm-text-primary)]"
               >
                 <option value="">Auto-detect from prompt</option>
                 {PROJECT_TYPES.map((type) => (
@@ -105,20 +104,20 @@ export function ProjectPromptInput({ onGenerate, disabled }: ProjectPromptInputP
                 ))}
               </select>
               {selectedProjectType && (
-                <p className="mt-1 text-xs text-gray-500">{selectedProjectType.description}</p>
+                <p className="mt-1 text-xs text-[var(--sqm-text-muted)]">{selectedProjectType.description}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="suburb" className="block text-sm font-medium text-gray-700 mb-2">
-                Melbourne Suburb <span className="text-gray-400">(optional)</span>
+              <label htmlFor="suburb" className="block text-sm font-medium text-[var(--sqm-text-primary)] mb-2">
+                Melbourne Suburb <span className="text-[var(--sqm-text-muted)]">(optional)</span>
               </label>
               <select
                 id="suburb"
                 value={suburb}
                 onChange={(e) => setSuburb(e.target.value)}
                 disabled={disabled}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                className="w-full px-4 py-3 border border-[var(--sqm-border-light)] rounded-lg focus:ring-2 focus:ring-[var(--sqm-green)] focus:border-[var(--sqm-green)] bg-[var(--sqm-bg-elevated)] text-[var(--sqm-text-primary)]"
               >
                 <option value="">Auto-detect from prompt</option>
                 {Object.entries(SUBURBS_BY_REGION).map(([region, suburbs]) => (
@@ -132,14 +131,14 @@ export function ProjectPromptInput({ onGenerate, disabled }: ProjectPromptInputP
                 ))}
               </select>
               {selectedSuburb && (
-                <p className="mt-1 text-xs text-gray-500">{selectedSuburb.region} Melbourne</p>
+                <p className="mt-1 text-xs text-[var(--sqm-text-muted)]">{selectedSuburb.region} Melbourne</p>
               )}
             </div>
           </div>
 
           {/* Prompt textarea */}
           <div>
-            <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="prompt" className="block text-sm font-medium text-[var(--sqm-text-primary)] mb-2">
               Describe your development project
             </label>
             <textarea
@@ -147,10 +146,10 @@ export function ProjectPromptInput({ onGenerate, disabled }: ProjectPromptInputP
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="e.g., Modern dual occupancy in Balwyn North, dark brick facade with timber battens, double garages, landscaped front gardens..."
-              className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-900 placeholder-gray-400"
+              className="w-full h-32 px-4 py-3 border border-[var(--sqm-border-light)] rounded-lg focus:ring-2 focus:ring-[var(--sqm-green)] focus:border-[var(--sqm-green)] resize-none bg-[var(--sqm-bg-elevated)] text-[var(--sqm-text-primary)] placeholder-[var(--sqm-text-muted)]"
               disabled={disabled}
             />
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-[var(--sqm-text-muted)]">
               Describe materials, style, and any special features. Project type and suburb from dropdowns will be used if selected.
             </p>
           </div>
@@ -158,25 +157,25 @@ export function ProjectPromptInput({ onGenerate, disabled }: ProjectPromptInputP
           <Button
             type="submit"
             disabled={!prompt.trim() || disabled}
-            className="w-full py-6 text-lg"
+            className="w-full py-6 text-lg sqm-button"
           >
             Generate Showcase Package (18 images)
           </Button>
         </form>
-      </Card>
+      </div>
 
       <div className="space-y-3">
-        <h3 className="text-sm font-medium text-gray-700">Example prompts - click to use</h3>
+        <h3 className="text-sm font-medium text-[var(--sqm-text-primary)]">Example prompts - click to use</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {EXAMPLE_PROMPTS.map((example, index) => (
             <button
               key={index}
               onClick={() => handleExampleClick(example)}
               disabled={disabled}
-              className="text-left p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-left p-4 border border-[var(--sqm-border)] rounded-lg hover:border-[var(--sqm-green)] hover:bg-[var(--sqm-bg-elevated)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <p className="font-medium text-gray-900 text-sm">{example.title}</p>
-              <p className="text-gray-500 text-xs mt-1 line-clamp-2">{example.prompt}</p>
+              <p className="font-medium text-[var(--sqm-text-primary)] text-sm">{example.title}</p>
+              <p className="text-[var(--sqm-text-muted)] text-xs mt-1 line-clamp-2">{example.prompt}</p>
             </button>
           ))}
         </div>
