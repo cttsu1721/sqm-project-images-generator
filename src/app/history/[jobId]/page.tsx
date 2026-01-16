@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
+import { AppShell } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
 import { ShowcaseGallery, ShowcaseImage } from "@/components/ShowcaseGallery";
 import { GenerationProgress, GenerationStatus } from "@/components/GenerationProgress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Download, Plus, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 
 interface JobPageProps {
   params: Promise<{ jobId: string }>;
@@ -54,7 +57,6 @@ export default function JobDetailPage({ params }: JobPageProps) {
       });
       setLoading(false);
 
-      // Continue polling if job is in progress
       if (
         data.status !== "complete" &&
         data.status !== "error" &&
@@ -119,160 +121,155 @@ export default function JobDetailPage({ params }: JobPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading job...</span>
-      </div>
+      <AppShell>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-6 h-6 text-[var(--sqm-green)] animate-spin" />
+          <span className="ml-3 text-[var(--sqm-text-muted)]">Loading job...</span>
+        </div>
+      </AppShell>
     );
   }
 
   if (error || !jobData) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-            <h2 className="text-xl font-semibold text-red-800 mb-2">
-              Job Not Found
-            </h2>
-            <p className="text-red-600 mb-6">
-              {error || "This job doesn't exist or has been deleted."}
-            </p>
-            <Link href="/history">
-              <Button variant="outline">Back to History</Button>
-            </Link>
+      <AppShell>
+        <div className="sqm-card p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-400" />
           </div>
+          <h2 className="text-xl font-serif font-semibold text-[var(--sqm-text-primary)] mb-2">
+            Job Not Found
+          </h2>
+          <p className="text-[var(--sqm-text-muted)] mb-6">
+            {error || "This job doesn't exist or has been deleted."}
+          </p>
+          <Link href="/history">
+            <Button
+              variant="outline"
+              className="border-[var(--sqm-border-light)] text-[var(--sqm-text-secondary)]"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to History
+            </Button>
+          </Link>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Link
-                href="/history"
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+    <AppShell>
+      <PageHeader
+        title="Project Details"
+        subtitle={
+          <div className="flex items-center gap-3 flex-wrap mt-2">
+            {jobData.projectType && (
+              <Badge
+                variant="outline"
+                className="border-[var(--sqm-border-light)] text-[var(--sqm-text-secondary)]"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-              </Link>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Project Details
-              </h1>
-            </div>
-            <div className="flex items-center gap-3 flex-wrap">
-              {jobData.projectType && (
-                <Badge variant="outline">
-                  {formatProjectType(jobData.projectType)}
-                </Badge>
-              )}
-              {jobData.suburb && (
-                <Badge variant="secondary">{formatSuburb(jobData.suburb)}</Badge>
-              )}
-              {jobData.createdAt && (
-                <span className="text-sm text-gray-500">
-                  {formatDate(jobData.createdAt)}
-                </span>
-              )}
-            </div>
+                {formatProjectType(jobData.projectType)}
+              </Badge>
+            )}
+            {jobData.suburb && (
+              <Badge className="bg-[var(--sqm-bg-elevated)] text-[var(--sqm-text-secondary)] border border-[var(--sqm-border)]">
+                {formatSuburb(jobData.suburb)}
+              </Badge>
+            )}
+            {jobData.createdAt && (
+              <span className="text-sm text-[var(--sqm-text-muted)]">
+                {formatDate(jobData.createdAt)}
+              </span>
+            )}
           </div>
+        }
+        actions={
           <div className="flex items-center gap-3">
             {jobData.status === "complete" && jobData.images.length > 0 && (
-              <Button variant="outline" onClick={handleDownloadAll}>
+              <Button
+                variant="outline"
+                onClick={handleDownloadAll}
+                className="border-[var(--sqm-border-light)] text-[var(--sqm-text-secondary)] hover:text-[var(--sqm-text-primary)] hover:border-[var(--sqm-green)]"
+              >
+                <Download className="w-4 h-4 mr-2" />
                 Download ZIP
               </Button>
             )}
-            <Link href="/generate">
-              <Button>New Project</Button>
+            <Link href="/">
+              <Button className="sqm-button">
+                <Plus className="w-4 h-4 mr-2" />
+                New Project
+              </Button>
             </Link>
           </div>
+        }
+      />
+
+      {/* Prompt Card */}
+      <div className="sqm-card p-6 mb-8">
+        <h3 className="text-sm font-medium text-[var(--sqm-text-muted)] mb-2">
+          Project Description
+        </h3>
+        <p className="text-[var(--sqm-text-primary)]">{jobData.prompt}</p>
+      </div>
+
+      {/* Progress Section */}
+      {isGenerating && (
+        <div className="mb-8">
+          <GenerationProgress
+            status={{
+              status: jobData.status as GenerationStatus["status"],
+              progress: jobData.progress,
+              currentImage: jobData.currentImage,
+              totalImages: jobData.totalImages,
+              currentVariation: jobData.currentVariation,
+              message: jobData.message,
+            }}
+          />
         </div>
+      )}
 
-        {/* Prompt Card */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">
-            Project Description
-          </h3>
-          <p className="text-gray-900">{jobData.prompt}</p>
-        </div>
-
-        {/* Progress Section */}
-        {isGenerating && (
-          <div className="mb-8">
-            <GenerationProgress
-              status={{
-                status: jobData.status as GenerationStatus["status"],
-                progress: jobData.progress,
-                currentImage: jobData.currentImage,
-                totalImages: jobData.totalImages,
-                currentVariation: jobData.currentVariation,
-                message: jobData.message,
-              }}
-            />
-          </div>
-        )}
-
-        {/* Error Message */}
-        {jobData.status === "error" && (
-          <div className="mb-8 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <svg
-                className="w-6 h-6 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <div>
-                <p className="font-medium text-red-800">Generation Failed</p>
-                <p className="text-sm text-red-600">{jobData.message}</p>
-              </div>
+      {/* Error Message */}
+      {jobData.status === "error" && (
+        <div className="mb-8 sqm-card p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+            </div>
+            <div>
+              <p className="font-medium text-[var(--sqm-text-primary)]">
+                Generation Failed
+              </p>
+              <p className="text-sm text-[var(--sqm-text-muted)]">
+                {jobData.message}
+              </p>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Results Gallery */}
-        {jobData.images.length > 0 && (
-          <ShowcaseGallery
-            images={jobData.images}
-            projectInfo={{
-              prompt: jobData.prompt,
-              suburb: jobData.suburb,
-              projectType: jobData.projectType,
-            }}
-            onDownloadAll={handleDownloadAll}
-            jobId={jobId}
-          />
-        )}
+      {/* Results Gallery */}
+      {jobData.images.length > 0 && (
+        <ShowcaseGallery
+          images={jobData.images}
+          projectInfo={{
+            prompt: jobData.prompt,
+            suburb: jobData.suburb,
+            projectType: jobData.projectType,
+          }}
+          onDownloadAll={handleDownloadAll}
+          jobId={jobId}
+        />
+      )}
 
-        {/* Empty State */}
-        {jobData.status === "complete" && jobData.images.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-            <p className="text-gray-500">No images were generated for this job.</p>
-          </div>
-        )}
-      </div>
-    </div>
+      {/* Empty State */}
+      {jobData.status === "complete" && jobData.images.length === 0 && (
+        <div className="text-center py-12 sqm-card">
+          <p className="text-[var(--sqm-text-muted)]">
+            No images were generated for this job.
+          </p>
+        </div>
+      )}
+    </AppShell>
   );
 }
