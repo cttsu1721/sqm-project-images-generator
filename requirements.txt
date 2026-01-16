@@ -1,0 +1,16 @@
+# Python dependencies for SQM Project Images Generator Agent
+
+# Claude Agent SDK
+claude-agent-sdk>=0.1.19
+
+# Google Generative AI (Gemini)
+google-generativeai>=0.8.0
+
+# Image processing
+Pillow>=10.0.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Async support
+aiofiles>=23.0.0
